@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<style>
+body{ background:black;}
+#c1{ background:white;}
+#img1{ background:white;}
+</style>
+<script>
+window.onload = function(){
+	var oImg = document.getElementById('img1');
+	var oC = document.getElementById('c1');
+	var oGC = oC.getContext('2d');
+	
+	//使用构造函数创建两个对象
+	var c1 = new Shape(100,100,50);
+	var c2 = new Shape(200,200,50);
+	
+	//当鼠标在“oC”中点击时，每个对象都执行“reDraw”(重绘)函数
+	oC.onmousedown = function(ev){
+		var ev = ev || window.event;
+		var point = {
+			x : ev.clientX - oC.offsetLeft,
+			y : ev.clientY - oC.offsetTop
+		};
+		
+		c1.reDraw(point);
+		c2.reDraw(point);
+		
+	};
+
+	//给对象添加“click”方法，要在reDraw方法中进行判断后才会执行。
+	c1.click = function(){
+		alert(123);
+	};
+	
+	c2.click = function(){
+		alert(456);
+	};
+	
+	//将canvas绘制图像的过程封装成一个对象的构造函数
+	function Shape(x,y,r){
+		this.x = x;
+		this.y = y;
+		this.r = r;
+		//构造函数内执行绘画的代码（本例的构造函数为画圆形）
+		oGC.beginPath();
+		oGC.arc(this.x,this.y,this.r,0,360*Math.PI/180,false);
+		oGC.closePath();
+		oGC.fill();
+	}
+	
+	//canvas绘图对象的“重绘”函数：对象重新绘制图像，并马上进行"isPointInPath"判断
+	Shape.prototype.reDraw = function(point){
+		//当执行对象的“重绘”函数时，重新执行一次绘制的代码
+		oGC.beginPath();
+		oGC.arc(this.x,this.y,this.r,0,360*Math.PI/180,false);
+		oGC.closePath();
+		oGC.fill();
+		//执行完绘制代码后，使用"isPointInPath"进行判断
+		if( oGC.isPointInPath(point.x,point.y) ){
+			this.click(); //如果"isPointInPath"方法判断为true，执行给对象添加的“click”函数
+		}
+		
+	};
+};
+</script>
+</head>
+
+<body>
+<canvas id="c1" width="400" height="400"></canvas>
+<img id="img1" src="" />
+</body>
+</html>

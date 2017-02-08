@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<style>
+body{ background:black;}
+#c1{ background:white;}
+ul{ color:white; margin-right:10px;}
+ul li{font-size:30px;}
+</style>
+<script>
+window.onload = function(){
+	var oC = document.getElementById('c1');
+	var oGC = oC.getContext('2d');
+	var oUl=document.getElementsByTagName("ul")[0];
+	var aLi=oUl.getElementsByTagName("li");
+	for (var i=0;i<aLi.length ;i++ )
+	{
+		aLi[i].onclick=function(){
+			var txt=this.innerHTML;
+			draw(txt);
+		}
+	}
+	function draw(str){
+		
+		var txtH=180;
+		oGC.font=txtH+"px impact";
+		oGC.fillStyle="red";
+		oGC.textBaseline="top";
+		
+		var txtW=oGC.measureText(str).width;
+		oGC.fillText(str,(oC.width-txtW)/2,(oC.height-txtH)/2);
+		
+		var oImg=oGC.getImageData((oC.width-txtW)/2,(oC.height-txtH)/2,txtW,txtH);
+
+		oGC.clearRect(0,0,oC.width,oC.height);
+
+		var arr=randomArr(txtW*txtH,txtW*txtH/10);
+
+		var newImg=oGC.createImageData(txtW,txtH);
+
+		for (var i=0;i<arr.length;i++ )
+		{
+			newImg.data[4*arr[i]]=oImg.data[4*arr[i]];
+			newImg.data[4*arr[i]+1]=oImg.data[4*arr[i]+1];
+			newImg.data[4*arr[i]+2]=oImg.data[4*arr[i]+2];
+			newImg.data[4*arr[i]+3]=oImg.data[4*arr[i]+3];
+		}
+		oGC.putImageData(newImg,(oC.width-txtW)/2,(oC.height-txtH)/2);
+	}
+
+	function randomArr(iAll,iNow){
+		var arr=[];
+		var newArr=[];
+		for (var i=0;i<iAll;i++ )
+		{
+			arr.push(i);
+		}
+		for (var i=0;i<iNow ;i++ )
+		{
+			newArr.push(arr.splice(Math.floor(Math.random()*arr.length),1))
+		}
+		return newArr;
+	}
+
+};
+</script>
+</head>
+
+<body>
+<canvas id="c1" width="400" height="400"></canvas>
+<ul>
+<li>妙</li>
+<li>味</li>
+<li>课</li>
+<li>堂</li>
+</ul>
+
+</body>
+</html>

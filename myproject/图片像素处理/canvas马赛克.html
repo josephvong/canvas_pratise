@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<style>
+body{ background:black;}
+#c1{ background:white;}
+ul{float:left; color:white; margin-right:10px;}
+ul li{font-size:30px;}
+</style>
+<script>
+window.onload = function(){
+	var oC = document.getElementById('c1');
+	var oGC = oC.getContext('2d');
+	var yImg=new Image();
+	yImg.onload=function(){
+		Draw(this);
+	}
+	yImg.src="2.jpg";
+
+	function Draw(obj){
+		oC.width=obj.width;
+		oC.height=2*obj.height;
+		oGC.drawImage(obj,0,0);
+
+		var oImg=oGC.getImageData(0,0,obj.width,obj.height);
+		var w=oImg.width;
+		var h=oImg.height;
+		
+
+		var num=5; //设置马赛克每个的大小（5px*5px）
+		var cellW=w/num;  //算出要处理的图片横向的马赛克格数
+		var cellH=h/num;  //算出要处理的图片纵向的马赛克格数
+
+		var newImg=oGC.createImageData(obj.width,obj.height);
+
+		for (var i=0;i<cellH ;i++ ) //轮询纵向列数
+		{
+			for (var j=0;j<cellW ;j++ ) //在每列中轮询横向的每个马赛克小格
+			{
+				//在当前列(i)的当前格(j)中，获取格内某个点的颜色(rgba); （j*num/i*num是每个小格的最坐上方的点 / 小格的(0,0)）
+				var result=getXY(oImg,j*num+Math.floor(Math.random()*num),i*num+Math.floor(Math.random()*num));
+				
+				
+				for (var k=0;k<num ;k++ )//轮询每个小格内的点行
+				{
+					for (var l=0;l<num;l++ )//轮询每个小格内的当前行中的每个点
+					{
+						setXY(newImg,j*num+l,i*num+k,result); //将小格内的所有点变成上面获得的颜色(rgba)
+					}
+				}
+			}
+		}
+		oGC.putImageData(newImg,0,obj.height);
+	}
+	function getXY(obj,x,y){ //针对一行一列进行操作
+		
+		var w = obj.width;
+		var h = obj.height;
+		var d = obj.data;
+		
+		var color = [];
+		
+		color[0] = d[4*(y*w+x)];
+		color[1] = d[4*(y*w+x)+1];
+		color[2] = d[4*(y*w+x)+2];
+		color[3] = d[4*(y*w+x)+3];
+		
+		return color;
+		
+	}
+	
+	function setXY(obj,x,y,color){
+		var w = obj.width;
+		var h = obj.height;
+		var d = obj.data;
+		
+		
+		d[4*(y*w+x)] = color[0];
+		d[4*(y*w+x)+1] = color[1];
+	 	d[4*(y*w+x)+2] = color[2];
+		d[4*(y*w+x)+3] = color[3];
+		
+	}
+}	
+
+	
+
+
+</script>
+</head>
+
+<body>
+<canvas id="c1" width="400" height="400"></canvas>
+</body>
+</html>

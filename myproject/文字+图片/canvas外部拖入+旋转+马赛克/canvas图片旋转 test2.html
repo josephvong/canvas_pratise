@@ -1,0 +1,222 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<style>
+body{ background:yellow;}
+#div1{height:300px; width:300px; background:white;}
+canvas{ background:white; margin-top:20px;}
+</style>
+<script type="#text/javascript" src="C:\Users\josephh.Johndoe-PC\Desktop\个性化js库/myJS1209.js"></script>
+<script  type="text/javascript" >
+window.onload = function(){
+	var oBtn1=document.getElementById("btn1");
+	var oBtn2=document.getElementById("btn2");
+	var oBtn3=document.getElementById("btn3");
+	var oBtn4=document.getElementById("btn4");
+	var oC=document.getElementById("c1");
+	var oGC=oC.getContext("2d");
+
+	var oImg=null;		//图片对象（用于预载入）
+	var CWidth=null;	//canvas的宽度变量
+	var CHeight=null;	//canvas的高度变量
+	
+	var oRig=null;      //图像未进行马赛克处理时的像素对象
+
+	var flag=false;		//判断是否已经载入图片的变量
+	var isMosk=false;   //判断图片是否被马赛克处理
+	var n=0;			//转动值的变量
+
+	oC.ondragenter=function(e){
+		var oEvent=e||event;
+	}
+
+	oC.ondragover=function(e){
+		var oEvent=e||event;
+		oEvent.preventDefault();
+	}
+
+	oC.ondrop=function(e){
+		var oEvent=e||event;
+		oEvent.preventDefault();
+		var fs=oEvent.dataTransfer.files;
+		
+		if (fs.length>1)
+		{
+			alert("只能放一张图片");
+		}else{
+			if (fs[0].type.indexOf("image")!=-1)
+			{
+				var fd=new FileReader();
+				fd.readAsDataURL(fs[0]);
+				fd.onload=function(){
+					oImg=new Image();
+					oImg.onload=function(){
+						CWidth=this.width;		//使用图片oImg的width设置canvas的width 
+						CHeight=this.height;	//使用图片oImg的height设置canvas的height
+						draw(this,CWidth,CHeight);	//将图片载入canvas
+						flag=true;
+					}
+					oImg.src=this.result;
+				}
+			}
+		}
+	}
+
+	//图片载入canvas函数
+	function draw(obj,width,height){
+		var oC=document.getElementById("c1");
+		var oGC=oC.getContext("2d");
+		oC.width=width;
+		oC.height=height;
+		oGC.drawImage(obj,0,0);	
+	}
+	
+//马赛克与还原---------------------------	
+	oBtn3.onclick=function(){
+		if (flag==true && isMosk==false)
+		{
+			oRig=Mosak("c1",5);
+			isMosk=true;
+		}
+	}
+	oBtn4.onclick=function(){
+		if (flag==true && isMosk==true)
+		{
+			oGC.putImageData(oRig,0,0);
+			isMosk=false;
+		}		
+	}	
+//--------------------------------------
+
+//顺逆时针旋转---------------------------
+	oBtn1.onclick=function(){
+		if (n==0){n=3}else{n-=1;}
+		if (flag==true && isMosk==true)
+		{	
+			toChange(oImg,CWidth,CHeight,n);
+			oRig=Mosak("c1",5);
+		}else if (flag==true && isMosk==false)
+		{
+			toChange(oImg,CWidth,CHeight,n);
+		}
+		document.title=n;
+	}
+
+	oBtn2.onclick=function(){
+		if (n==3){n=0}else{n+=1;}	
+		if (flag==true && isMosk==true)
+		{	
+			toChange(oImg,CWidth,CHeight,n);
+			oRig=Mosak("c1",5);
+		}else if (flag==true && isMosk==false)
+		{
+			toChange(oImg,CWidth,CHeight,n);
+		}
+		document.title=n;
+	}
+//-----------------------------------------		
+		
+		
+}
+	
+	
+	
+
+	function toChange(obj,width,height,n){
+		var oC=document.getElementById("c1");
+		var oGC=oC.getContext("2d");
+		switch (n)
+		{				
+			case 1:
+				oC.width=height;
+				oC.height=width;
+				oGC.rotate(90*Math.PI/180);
+				oGC.drawImage(obj,0,-height);
+				break;
+			case 2:
+				oC.width=obj.width;
+				oC.height=obj.height;
+				oGC.rotate(180*Math.PI/180);
+				oGC.drawImage(obj,-width,-height);
+				break;
+			case 3:
+			    oC.width=obj.height;
+				oC.height=obj.width;
+				oGC.rotate(270*Math.PI/180);
+				oGC.drawImage(obj,-width,0);
+				break;
+			case 0:
+				oC.width=obj.width;
+				oC.height=obj.height;
+				oGC.rotate(0*Math.PI/180);
+				oGC.drawImage(obj,0,0);
+				break;
+		}
+	}
+
+
+function Mosak(id,n){
+	var oC=document.getElementById(id);
+	var oGC=oC.getContext("2d");
+	var oImg=oGC.getImageData(0,0,oC.width,oC.height);
+	var num=n;
+	var cellW=parseInt(oC.width/num);
+	var cellH=parseInt(oC.height/num);
+	var newImg=oGC.createImageData(oC.width,oC.height);
+
+	for (var i=0;i<cellH ;i++ )
+	{
+		for (var j=0;j<cellW ;j++ )
+		{
+			var result=getXY(oImg,j*num+Math.floor(Math.random()*num),i*num+Math.floor(Math.random()*num));
+			for (var k=0;k<num ;k++ )
+			{
+				for (var l=0;l<num ;l++ ){setXY(newImg,j*num+l,i*num+k,result);}
+			}
+		}
+	}
+	oGC.putImageData(newImg,0,0);
+	return oImg; //返回图像处理前的像素对象
+}
+	
+
+	
+
+
+function getXY(obj,x,y){
+	var w=obj.width;
+	var h=obj.height;
+	var d=obj.data;
+	var color=[];
+	color[0]=d[4*(y*w+x)];
+	color[1]=d[4*(y*w+x)+1];
+	color[2]=d[4*(y*w+x)+2];
+	color[3]=d[4*(y*w+x)+3];
+	return color;
+}
+
+//setXY(obj,x,y,color):设置图像内单个坐标点的(rgba)， 参数“color”以(r,g,b,a)形式出现。
+function setXY(obj,x,y,color){
+	var w=obj.width;
+	var h=obj.height;
+	var d=obj.data;
+	d[4*(y*w+x)]=color[0];
+	d[4*(y*w+x)+1]=color[1];
+	d[4*(y*w+x)+2]=color[2];
+	d[4*(y*w+x)+3]=color[3];
+}
+
+</script>
+</head>
+
+<body>
+<input type="button" id="btn1" value="<——"/>
+<input type="button" id="btn2" value="——>"/><br/>
+
+<canvas id="c1" width="300" height="300"></canvas><br/>
+<input type="button" id="btn3" value="打码"/>
+<input type="button" id="btn4" value="还原"/>
+</body>
+</html>

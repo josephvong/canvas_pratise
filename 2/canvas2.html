@@ -1,0 +1,125 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<style>
+body{ background:black;}
+#c1{ background:white;}
+</style>
+<script>
+
+window.onload = function(){
+	var oC = document.getElementById('c1');
+	var oGC = oC.getContext('2d');
+
+//生成一个时钟的函数：
+	function toDraw(){
+		//设定圆心坐标和半径
+		var x = 200;
+		var y = 200; 
+		var r = 150;
+//每次时间变化前，先将画布清空，再执行下面绘制时钟和指针的函数
+		oGC.clearRect(0,0,oC.width,oC.height);
+
+//获取当前时分秒的数值：
+		var oDate = new Date();
+		var oHours = oDate.getHours();
+		var oMin = oDate.getMinutes();
+		var oSen = oDate.getSeconds();
+
+//计算对应时分秒的弧度值：
+/*注意：
+1.获取到时间值后，要从时钟的0点开始计算，时钟的0点半径的角度为-90.因此角度也要从-90开始算起。
+2.当分针运动且未到整点时，时针也会相应移动，移动的度数值为：在原来的基础上+分钟数/2（由于Min最大为60，而时针的每次转动度数为30度。因此在原来30度基础上+Min/2） */
+		var oHoursValue = (-90 + oHours*30 + oMin/2) * Math.PI/180;
+		var oMinValue = (-90 + oMin*6) * Math.PI/180;
+		var oSenValue = (-90 + oSen*6) * Math.PI/180;
+
+// 画出钟盘：要划四个圆，两个描线作为刻度，两个填充底色用于遮盖。-----------
+/*画出秒钟的刻度的圆：
+为了给圆形内部添加刻度，因此将一个圆形分成60分（每6度一份）来划。*/		
+		oGC.beginPath();
+		for(var i=0;i<60;i++){
+			oGC.moveTo(x,y);
+			oGC.arc(x,y,r,6*i*Math.PI/180,6*(i+1)*Math.PI/180,false);
+		}//循环60次，每次划6度的弧度。	
+		oGC.closePath();
+		oGC.stroke(); //描线，划圆结束
+		
+		
+		// 再画一个白色的圆形块状，覆盖在前一个圆上
+		oGC.fillStyle = 'white';	
+		oGC.beginPath();	
+		oGC.moveTo(x,y);
+		oGC.arc(x,y,r*19/20,0,360*(i+1)*Math.PI/180,false);
+		//覆盖的圆盘半径稍微小一点，让原来的原型内部线条显示出来，形成刻度
+		oGC.closePath();
+		oGC.fill(); // 填充，划圆结束
+		
+/*画出分钟的刻度：
+方法：参考秒刻度的画法，将一个圆划分为12分来划，画好后再用一个白色的原型块进行覆盖。*/
+		oGC.lineWidth = 3;
+		oGC.beginPath();
+		for(var i=0;i<12;i++){
+			oGC.moveTo(x,y);
+			oGC.arc(x,y,r,30*i*Math.PI/180,30*(i+1)*Math.PI/180,false);
+		}
+		oGC.closePath();
+		oGC.stroke();//描线，划圆结束
+		
+//画出覆盖显示分钟刻度的白色圆型块，半径需要更小	
+		oGC.fillStyle = 'white';
+		oGC.beginPath();
+		oGC.moveTo(x,y);
+		oGC.arc(x,y,r*18/20,0,360*(i+1)*Math.PI/180,false);
+		oGC.closePath();
+		oGC.fill();// 填充，划圆结束
+		
+//--------------------------------------------------------------------------------
+
+//画钟的时针和秒针：-------------------------------------------------------------
+/*指针的绘画方法：
+1. 画一个起始弧度与结束弧度相同的圆，其半径不做任何角度变化直接重合（因此没有远的变长，只有半径本身一条直线）
+*/
+
+//画出时针：
+//找出与当前hour时间对应的弧度，计算出“oHoursValue”（对应当前小时数的弧度值）
+		oGC.lineWidth = 5;
+		oGC.beginPath();
+		oGC.moveTo(x,y);
+		oGC.arc(x,y,r*10/20,oHoursValue,oHoursValue,false);
+		oGC.closePath();
+		oGC.stroke();
+
+//画出分针：		
+		oGC.lineWidth = 3;
+		oGC.beginPath();
+		oGC.moveTo(x,y);
+		oGC.arc(x,y,r*14/20,oMinValue,oMinValue,false);
+		oGC.closePath();
+		oGC.stroke();
+		
+//画出秒针：		
+		oGC.lineWidth = 1;
+		oGC.beginPath();
+		oGC.moveTo(x,y);
+		oGC.arc(x,y,r*19/20,oSenValue,oSenValue,false);
+		oGC.closePath();
+		oGC.stroke();
+	}
+
+//设置定时器：让每秒钟执行一次toDraw()函数，让画布清除当前时间候，再绘画出对应当前时间的时钟和指针。
+	setInterval(toDraw,1000);
+	
+	toDraw(); //加载时同样要执行toDraw()函数。
+	
+};
+
+</script>
+</head>
+
+<body>
+<canvas id="c1" width="400" height="400"></canvas>
+</body>
+</html>

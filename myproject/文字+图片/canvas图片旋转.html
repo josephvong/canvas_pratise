@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<style>
+body{ background:black;}
+canvas{ background:white;}
+</style>
+<script>
+
+window.onload = function(){
+	var oLeft=document.getElementById("btn1");
+	var oRight=document.getElementById("btn2");
+	var oDiv=document.getElementById("div1");
+	var oImg=oDiv.getElementsByTagName("img")[0];
+
+	var yImg=new Image();
+	var iNow=0;
+	yImg.onload=function(){draw(oImg);}
+	yImg.src=oImg.src;
+	function draw(obj){
+		var oC=document.createElement("canvas");
+		var oGC=oC.getContext("2d");
+		
+		oC.width=obj.width;
+		oC.height=obj.height;
+
+		obj.parentNode.replaceChild(oC,obj);
+		oGC.drawImage(obj,0,0);
+		
+		oLeft.onclick=function(){
+			if (iNow==0){iNow=3;}else{iNow-=1;}
+			toChange();
+			document.title=iNow;
+		}
+		oRight.onclick=function(){
+			if (iNow==3){iNow=0;}else{iNow+=1;}
+			toChange();
+			document.title=iNow;
+		}
+
+		function toChange(){
+			switch(iNow){
+				case 1:
+					oC.width=403;
+					oC.height=987;
+					oGC.rotate(90*Math.PI/180);
+					oGC.drawImage(obj,0,-403);
+				break;
+
+				case 2:
+					oC.width=987;
+					oC.height=403;
+					oGC.rotate(180*Math.PI/180);
+					oGC.drawImage(obj,-987,-403);
+				break;
+
+				case 3:
+					oC.width=403;
+					oC.height=987;
+					oGC.rotate(270*Math.PI/180);
+					oGC.drawImage(obj,-987,0);
+				break;
+
+				case 0:
+					oC.width=987;
+					oC.height=403;
+					oGC.rotate(0);
+					oGC.drawImage(obj,0,0);
+				break;
+			}
+		}
+	}
+};
+
+</script>
+</head>
+
+<body>
+<!--<canvas id="c1" width="400" height="400"></canvas>-->
+<input type="button" id="btn1" value="<——"/>
+<input type="button" id="btn2" value="——>"/>
+<div id="div1">
+<img src="test.png"/>
+</div>
+</body>
+</html>
