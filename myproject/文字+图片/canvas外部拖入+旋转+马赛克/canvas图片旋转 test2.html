@@ -48,6 +48,7 @@ window.onload = function(){
 		}else{
 			if (fs[0].type.indexOf("image")!=-1)
 			{
+				console.log(fs[0]);
 				var fd=new FileReader();
 				fd.readAsDataURL(fs[0]);
 				fd.onload=function(){
