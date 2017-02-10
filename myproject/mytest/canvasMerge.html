@@ -1,0 +1,166 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<style>
+body{ background:black;}
+canvas{ background:white;}
+</style>
+
+</head>
+
+<body style="background-color:#000;">
+<img src="" alt="" width="320px" style="vertical-align: top;">
+
+</body>
+<!-- <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.js"></script> -->
+<script>
+var data={
+	"name":"ihge",
+	"shopname":"中国五粮液",
+	"image":[
+	//"http://cdn.attach.w3cfuns.com/notes/pics/201605/29/161916yav3eetuga3r9suz.png",
+	"2.jpg","2.png","shareImg.png","2.jpg"
+	//"http://cdn.attach.qdfuns.com/notes/pics/201605/29/161916yav3eetuga3r9suz.png",
+	//"http://cdn.attach.qdfuns.com/notes/pics/201605/29/161913l2r0rt0yr6in666k.png",
+	//"http://cdn.attach.qdfuns.com/notes/pics/201605/29/161913lqynpnq3pp61s3ye.png"
+	]
+};
+var imgPath=null; // 将要输出的图片路径
+
+function draw(){
+	var mycanvas=document.createElement('canvas');
+	document.body.appendChild(mycanvas);
+	var len=data.image.length;
+	mycanvas.width=640;
+	mycanvas.height=780;
+	if(mycanvas.getContext){
+		var context=mycanvas.getContext('2d');
+		// 生成白色画布
+		context.fillStyle='#fff';
+		context.fillRect(0,0,mycanvas.width,mycanvas.height);
+
+		// 渲染灰色顶部
+		context.fillStyle='#f8f8f8';
+		context.fillRect(0,0,mycanvas.width,140);
+
+		// 渲染顶部左边圆角文字框
+		context.fillStyle='#fff';
+		context.strokeStyle='#dfdfdf';
+		context.roundRect(150,20,470,100,6); // 自定义圆角矩形渲染函数
+		context.fill();
+
+		//	渲染圆角文字框左边三角形
+		context.stroke();
+		context.beginPath();
+		context.moveTo(151,40);
+		context.lineTo(140,48);
+		context.lineTo(151,56);
+		context.fill();
+		context.stroke();
+
+		//-------------文字渲染---------//
+		// 顶部文字
+		context.font='28px 宋体';
+		context.fillStyle='#333';
+		context.fillText('我是',170,60);
+		context.fillStyle='#f5c158';
+		context.fillText(data.name,230,60);
+		context.fillStyle='#333';
+		context.fillText(',',235+context.measureText(data.name).width,60);
+		context.fillStyle='#333';
+		context.fillText('我为',170,100);
+		context.fillStyle='#f5c158';
+		context.fillText(data.shopname,230,100);
+		context.fillStyle='#333';
+		context.fillText('代言。',235+context.measureText(data.shopname).width,100);
+
+		//------------渲染宣传图片-------------------
+		var h=0;  // 设定图片的顶端基线
+		function drawing(num){
+
+			if(num<len){ // 当“num” 还未轮询完 图片列表时：
+
+				var img=new Image; // 图片对象
+				img.src=data.image[num]; //图片对象读取 图片路径
+				//img.crossOrigin = "Anonymous";  // 让 img对象可以跨域
+
+				// -------------渲染用户头像图片-------------------------
+				if(num==0){
+					img.onerror=function(){  // 头像读取失败时 显示默认logo
+						context.fillStyle='#fff';
+						context.stokeStyle='#dfdfdf';
+						context.fillRect(20,20,100,100);  // 头像框 显示位置
+						context.strokeRect(20,20,100,100);
+						context.font='24px 微软雅黑';
+						context.textAlign='center';
+						context.textBaseline='middle';  // 基线上下居中
+						context.fillStyle='#333';
+						context.fillText('LOGO',70,70);
+						drawing(num+1);
+					}
+					img.onload=function(){
+						context.drawImage(img,20,20,100,100);
+						drawing(num+1);
+					}
+				}else if(num==1){ // 加载第二张图片（宣传图）
+					img.onerror=function(){  // 如果宣传图加载失败
+							h=140;				// 下一张图的顶部基线为 140
+							drawing(num+1);
+						}
+					img.onload=function(){  // 加载成功
+						context.drawImage(img,0,140,mycanvas.width,300); //从y=140 开始渲染
+						h=440;  // 同时把下一张图的基线设为 440
+						drawing(num+1);  // 递归执行drawing()
+					}
+				}else if(num==2){ // 加载第三张图片
+					img.onload=function(){  // 加载成功
+						context.drawImage(img,55,h+20,240,240); //y 从上一张图片底部+20px 开始渲染
+						drawing(num+1);  // 递归执行drawing()
+					}
+				}else if(num==3){ // 加载第四张图片
+					img.onload=function(){  // 加载成功
+						context.drawImage(img,345,h+20,240,240); //渲染第四张图
+						// 渲染底部内容
+						context.font='bold 28px 宋体';
+						context.fillStyle='#C13E2C';
+						context.textAlign='center';
+						context.fillText('长按指纹 识别图中二维码 推广',mycanvas.width/2,h+300);
+
+						context.font='bold 24px 宋体';
+						context.fillStyle='#666';
+						context.textAlign='center';
+						context.fillText('关注我们 加入有礼品 推广有惊喜',mycanvas.width/2,h+330);
+						drawing(num+1);
+					}
+				}
+			}else{ // 图片加载完成后 生成图片路径 输出
+				imgPath=mycanvas.toDataURL();//"image/jpeg"
+				document.getElementsByTagName('img')[0].src=imgPath;
+			}
+		}
+		drawing(0) //开始从第1张图开始执行
+	}
+
+}
+
+CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) { //矩形圆角
+    var min_size = Math.min(w, h);
+    if (r > min_size / 2) r = min_size / 2;
+    // 开始绘制
+    this.beginPath();
+    this.moveTo(x + r, y);
+    this.arcTo(x + w, y, x + w, y + h, r);
+    this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r);
+    this.arcTo(x, y, x + w, y, r);
+    this.closePath();
+    return this;
+}
+
+draw();
+
+
+</script>
+</html>

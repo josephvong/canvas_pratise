@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>canvasMerge</title>
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0 " />
+<link rel="stylesheet" type="text/css" href="./reset.css">
+<link rel="stylesheet" type="text/css" href="./merge.css">
+</head>
+<body>
+<div>
+	<input type="file" style="width:150px"/>
+</div>
+<div class="can-wrap">
+	<div class="can-place">
+		<!-- <canvas id="can1"></canvas> -->
+		<div class="img-wrap">
+			<img id="sample" src=""/>
+		</div>
+	</div>
+	<div class="tool">
+		<input type="button" class="left" value="<"/>
+		<input type="button" class="right" value=">"/>
+		<input type="range" class="range" min="50" max="150" step="10">
+		<input type="button" class="save" value="save"/>
+	</div>
+	<!-- <div class="cover"> -->
+		<div class="view">
+			<div class="touch" style="width:100%; height:100%;"></div>
+		</div>
+	<!-- </div> -->
+</div>
+<img id="result" src="" style="width:300px;height:500px;border:1px solid red" />
+</body>
+<script src="./jquery.min.js"></script>
+<script type="text/javascript">
+
+var IWidth=0; // 图宽
+var IHeight=0;// 图高
+var oImg=null;		//图片对象（用于预载入）
+var n=0 ;  //旋转指标
+var touchX=0; // 触摸坐标
+var touchY=0; // 触摸坐标
+var toX=0; // 位移坐标x
+var toY=0; // 位移坐标y
+var viewX=300;
+var viewY=500;
+var nowRange=100;
+
+
+
+
+function getWH(){
+	var obj={
+		x:document.body.clientWidth,
+		y:document.documentElement.clientHeight
+	}
+	return obj
+}
+
+
+var canX=getWH().x;
+var canY=getWH().y;//Math.round((getWH().y)*90/100);
+
+$("html").css('width',getWH().x);
+$("html").css('height',getWH().y);
+$("body").css('width',getWH().x);
+$("body").css('height',getWH().y);
+$(".can-wrap").css('width',getWH().x);
+$(".can-wrap").css('height',getWH().y);
+$(".view").css({
+	"border-left":Math.floor((getWH().x-viewX)/2)+"px solid rgba(0,0,0,0.4)",
+	"border-right":Math.floor((getWH().x-viewX)/2)+"px solid rgba(0,0,0,0.4)",
+	"border-top":Math.floor((getWH().y-viewY)/2)+"px solid rgba(0,0,0,0.4)",
+	"border-bottom":Math.floor((getWH().y-viewY)/2)+"px solid rgba(0,0,0,0.4)",
+})
+
+$(".can-place").css("width",canX);  // canvas容器宽
+$(".can-place").css("height",canY); // canvas容器高
+// $("#can1").attr("width",canX);  // canvas容器宽
+// $("#can1").attr("height",canY); // canvas容器高
+
+//----------------------------------------------------------------
+
+oImg=new Image(); oImg.src="./test4.jpg";
+oImg.onload=function(){
+
+	if(this.width>=300 && this.height>=500){
+		IWidth=this.width/2 ;   // 记录图形的宽
+		IHeight=this.height/2 ; // 记录图像的高
+		$(".img-wrap").css({"width":IWidth,"height":IHeight}); // 容器大小
+		$("#sample").css({"width":IWidth,"height":IHeight}).attr("src",oImg.src);
+
+	}else{
+		alert("图片规格不符合标准")
+	}
+
+}
+
+
+
+
+
+$(".left").click(function(){
+	if (n<=0){n=3}else{n-=1;}
+	imgChange(n,IWidth,IHeight,nowRange);
+	document.title=n;
+})
+
+$(".right").click(function(){
+	if (n>=3){n=0}else{n+=1;}
+	imgChange(n,IWidth,IHeight,nowRange);
+	document.title=n;
+})
+
+$(".range").on("change",function(){
+	nowRange=this.value;
+	imgChange(n,IWidth,IHeight,nowRange);
+})
+$(".save").on("click",function(){
+
+
+	 var iImg=new Image();
+	 iImg.src="./test4.jpg";
+	 iImg.onload=function(){
+	 		var oC=document.createElement("canvas");
+	 		var oGC=oC.getContext("2d");
+	 		var goLeft=Math.floor((getWH().x-viewX)/2)*2;
+	 		var goTop=Math.floor((getWH().y-viewY)/2)*2;
+			oC.width=600;
+			oC.height=1000;
+
+			switch (n)
+			{
+				case 1: // 顺90
+					oGC.translate(toX*2-goLeft,toY*2-goTop);
+					oGC.rotate(90*Math.PI/180);
+					oGC.scale(nowRange/100,nowRange/100);
+					//oGC.drawImage(obj,0,-height);
+					oGC.drawImage(this,0,-this.height,this.width,this.height);
+					break;
+				case 2: // 顺180
+					oGC.rotate(180*Math.PI/180);
+					oGC.drawImage(obj,-width,-height);
+					break;
+				case 3:
+					oGC.rotate(270*Math.PI/180);
+					oGC.drawImage(obj,-width,0);
+					break;
+				case 0:
+					oGC.translate(toX*2-goLeft,toY*2-goTop);
+					oGC.rotate(0*Math.PI/180);
+					oGC.scale(nowRange/100,nowRange/100);
+					oGC.drawImage(this,0,0,this.width*nowRange/100,this.height*nowRange/100);
+					break;
+			}
+
+
+			var newSrc=oC.toDataURL();
+			$(".can-wrap").hide();
+			$("#result").attr("src",newSrc);
+
+	 }
+})
+
+
+/*----------拖动-----------------*/
+$(".view .touch").bind("touchstart",function(){
+	touchX=event.changedTouches[0].clientX-$(".img-wrap").offset().left;
+	touchY=event.changedTouches[0].clientY-$(".img-wrap").offset().top;
+})
+
+$(".view .touch").bind("touchmove",function(){
+	//console.log(event);
+	var x=event.changedTouches[0].clientX-touchX
+	var y=event.changedTouches[0].clientY-touchY
+	$(".img-wrap").css({"left":x,"top":y})
+	event.preventDefault()
+	event.stopPropagation()
+})
+$(".view .touch").bind("touchend",function(){
+	toX=$(".img-wrap").offset().left;
+	toY=$(".img-wrap").offset().top ;
+})
+/*----------拖动-----------------*/
+
+
+function imgChange(n,width,height,scale){
+	var scl=scale/100;
+	var w=width*scl;
+	var h=height*scl;
+	$("#sample").css({width:w,height:h})
+	switch (n)
+	{
+		case 1: // 顺90
+			$(".img-wrap").css({"width":h,"height":w});
+			$("#sample").css({"transform":"rotate(90deg)",left:h,top:0})
+			break;
+		case 2: // 顺180
+			$(".img-wrap").css({"width":w,"height":h});
+			$("#sample").css({"transform":"rotate(180deg)",left:w,top:h})
+			break;
+		case 3:
+			$(".img-wrap").css({"width":h,"height":w});
+			$("#sample").css({"transform":"rotate(270deg)",left:0,top:w})
+			break;
+		case 0:
+			$(".img-wrap").css({"width":w,"height":h});
+			$("#sample").css({"transform":"rotate(0deg)",left:0,top:0})
+			break;
+	}
+}
+
+function toChange(obj,width,height,n,scale,transX,transY){
+	var oC=document.getElementById("can1");
+	var oGC=oC.getContext("2d");
+	oGC.clearRect(0,0,oC.width,oC.height )
+			oC.width=height;
+			oC.height=width;
+			//oC.width=canX;
+			//oC.height=canY;
+
+			oGC.scale(scale/100,scale/100);
+			//oGC.translate(transX,transY);
+			oGC.rotate(90*Math.PI/180);
+			oGC.drawImage(obj,0,-height,width,height);
+}
+
+function draw(obj,width,height ){  // canvas内生成 原图
+	var oC=document.getElementById("can1");
+	var oGC=oC.getContext("2d");
+	oC.width=width;
+	oC.height=height;
+	oGC.drawImage(obj,0,0,width,height);
+	//--------测试90-------------
+	/*
+	oGC.rotate(90*Math.PI/180);
+	oGC.translate(50,50) // +toX -->can的+Y ， +toY --> can 的-X
+	oGC.drawImage(obj,0,-height,width,height);
+
+	oGC.rotate(180*Math.PI/180);
+	oGC.translate(-30,-60) //+toX -->can的-X ， +toY --> can 的-Y
+	oGC.drawImage(obj,-width,-height,width,height);
+
+	oGC.rotate(270*Math.PI/180);
+	oGC.translate(50,30) // +toX -->can的-Y ， +toY --> can 的+X
+	oGC.drawImage(obj,-width,0,width,height);
+	*/
+}
+
+function setRange(obj,oRan){
+	var iw=obj.width; // 图宽
+	var ih=obj.height;// 图高
+	if(iw/600>1){
+		oRan.attr("max",(iw/600*100).toFixed(0));
+		oRan.attr("value",(iw/600*100).toFixed(0));
+		oRan.attr("min",100);
+		nowRange=(iw/600*100).toFixed(0)
+	}else{
+		oRan.attr("max",100);
+		oRan.attr("min",(iw/600*100).toFixed(0));
+		oRan.attr("value",(iw/600*100).toFixed(0));
+		nowRange=(iw/600*100).toFixed(0)
+	}
+	console.log((iw/600*100).toFixed(0));
+}
+
+</script>
+</html>

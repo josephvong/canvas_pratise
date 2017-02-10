@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>canvasMerge</title>
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0 " />
+<link rel="stylesheet" type="text/css" href="./reset.css">
+<link rel="stylesheet" type="text/css" href="./merge.css">
+</head>
+<body>
+<div>
+	<input type="file" style="width:150px"/>
+</div>
+<div class="can-wrap">
+	<div class="can-place">
+		<canvas id="can1"></canvas>
+	</div>
+	<div class="tool">
+		<input type="button" class="left" value="<"/>
+		<input type="button" class="right" value=">"/>
+		<input type="range" class="range" value="100" min="50" max="150" step="10">
+		<input type="button" class="add" value="save"/>
+		<input type="button" class="subtract" value="save"/>
+	</div>
+	<div class="cover">
+		<div class="view"></div>
+	</div>
+</div>
+<img id="result" src=""/>
+</body>
+<script src="./jquery.min.js"></script>
+<script type="text/javascript">
+
+var IWidth=0; // 图宽
+var IHeight=0;// 图高
+var oImg=null;		//图片对象（用于预载入）
+var n=0 ;  //旋转指标
+var toX=0; // 位移坐标x
+var toY=0; // 位移坐标y
+var viewX=300;
+var viewY=500;
+var nowRange=0;
+
+
+
+
+function getWH(){
+	var obj={
+		x:document.body.clientWidth,
+		y:document.documentElement.clientHeight
+	}
+	return obj
+}
+
+
+var canX=getWH().x;
+var canY=getWH().y;//Math.round((getWH().y)*90/100);
+
+$(".can-wrap").css('width',getWH().x);
+$(".can-wrap").css('height',getWH().y);
+$(".cover .view").css({
+	"border-left":Math.floor((getWH().x-viewX)/2)+"px solid rgba(0,0,0,0.4)",
+	"border-right":Math.floor((getWH().x-viewX)/2)+"px solid rgba(0,0,0,0.4)",
+	"border-top":Math.floor((getWH().y-viewY)/2)+"px solid rgba(0,0,0,0.4)",
+	"border-bottom":Math.floor((getWH().y-viewY)/2)+"px solid rgba(0,0,0,0.4)",
+})
+
+$(".can-place").css("width",canX);  // canvas容器宽
+$(".can-place").css("height",canY); // canvas容器高
+// $("#can1").attr("width",canX);  // canvas容器宽
+// $("#can1").attr("height",canY); // canvas容器高
+
+//----------------------------------------------------------------
+
+oImg=new Image();
+oImg.onload=function(){
+
+	if(this.width>=300 && this.height>=500){
+		IWidth=this.width/2 ;   // 记录图形的宽
+		IHeight=this.height/2 ; // 记录图像的高
+		draw(this,IWidth,IHeight);
+	}else{
+		alert("图片规格不符合标准")
+	}
+
+}
+oImg.src="./test4.jpg";
+
+function draw(obj,width,height ){  // canvas内生成 原图
+	var oC=document.getElementById("can1");
+	var oGC=oC.getContext("2d");
+	oC.width=width;
+	oC.height=height;
+	oGC.drawImage(obj,0,0,width,height);
+
+	//--------测试90-------------
+	/*
+	oGC.rotate(90*Math.PI/180);
+	oGC.translate(50,50) // +toX -->can的+Y ， +toY --> can 的-X
+	oGC.drawImage(obj,0,-height,width,height);
+
+	oGC.rotate(180*Math.PI/180);
+	oGC.translate(-30,-60) //+toX -->can的-X ， +toY --> can 的-Y
+	oGC.drawImage(obj,-width,-height,width,height);
+
+	oGC.rotate(270*Math.PI/180);
+	oGC.translate(50,30) // +toX -->can的-Y ， +toY --> can 的+X
+	oGC.drawImage(obj,-width,0,width,height);
+	*/
+}
+
+function setRange(obj,oRan){
+	var iw=obj.width; // 图宽
+	var ih=obj.height;// 图高
+	if(iw/600>1){
+		oRan.attr("max",(iw/600*100).toFixed(0));
+		oRan.val((iw/600*100).toFixed(0));
+		oRan.attr("min",100);
+		nowRange=(iw/600*100).toFixed(0)
+	}else{
+		oRan.attr("max",1);
+		oRan.attr("min",(iw/600*100).toFixed(0));
+		oRan.val((iw/600*100).toFixed(0));
+		nowRange=(iw/600*100).toFixed(0)
+	}
+	console.log((iw/600*100).toFixed(0));
+}
+
+$(".left").click(function(){
+	if (n<=0){n=3}else{n-=1;}
+	toChange(oImg,IWidth,IHeight,n,$(".range").val(),toX,toY);
+	document.title=n;
+})
+
+$(".right").click(function(){
+	if (n>=3){n=0}else{n+=1;}
+	toChange(oImg,IWidth,IHeight,n,$(".range").val(),toX,toY);
+	document.title=n;
+})
+
+$(".range").on("change",function(){
+	toChange(oImg,IWidth,IHeight,n,$(this).val(),toX,toY);
+})
+
+$(".add").on("click",function(){
+	/*toX+=10;
+	toY+=10;
+	toChange(oImg,IWidth,IHeight,n,$(".range").val(),toX,toY);*/
+	var oC=document.getElementById("can1");
+		var newSrc=oC.toDataURL(0,0,IWidth*$(".range").val()/100,IHeight*$(".range").val()/100);
+		console.log(newSrc);
+		//$("#result").attr("scr",newSrc).css("z-index","5");
+		//$(".can-wrap").hide();
+})
+$(".subtract").on("click",function(){
+	toX-=10;
+	toY-=10;
+	toChange(oImg,IWidth,IHeight,n,$(".range").val(),toX,toY);
+})
+
+function toChange(obj,width,height,n,scale,transX,transY){
+	var oC=document.getElementById("can1");
+	var oGC=oC.getContext("2d");
+	oGC.clearRect(0,0,oC.width,oC.height )
+
+	switch (n)
+	{
+		case 1: // 顺90
+			oC.width=height;
+			oC.height=width;
+			//oC.width=canX;
+			//oC.height=canY;
+
+			oGC.scale(scale/100,scale/100);
+			//oGC.translate(transX,transY);
+			oGC.rotate(90*Math.PI/180);
+			oGC.drawImage(obj,0,-height,width,height);
+
+			break;
+		case 2: // 顺180
+			oC.width=width;
+			oC.height=height;
+			//oC.width=canX;
+			//oC.height=canY;
+
+			oGC.scale(scale/100,scale/100);
+			//oGC.translate(transX,transY);
+			oGC.rotate(180*Math.PI/180);
+			oGC.drawImage(obj,-width,-height,width,height);
+			break;
+		case 3:
+		  oC.width=height;
+			oC.height=width;
+			// oC.width=canX;
+			// oC.height=canY;
+
+			oGC.scale(scale/100,scale/100);
+			//oGC.translate(transX,transY);
+			oGC.rotate(270*Math.PI/180);
+			oGC.drawImage(obj,-width,0,width,height);
+			break;
+		case 0:
+			oC.width=width;
+			oC.height=height;
+			// oC.width=canX;
+			// oC.height=canY;
+
+			oGC.scale(scale/100,scale/100);
+			//oGC.translate(transX,transY);
+			oGC.rotate(0*Math.PI/180);
+			oGC.drawImage(obj,0,0,width,height);
+
+			break;
+	}
+}
+</script>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<style>
+body{}
+#c1{   }
+.imgfield{
+	width: 300px; height:300px;
+	margin:50px auto;
+	box-sizing: border-box;
+	border:1px solid red;
+	overflow:hidden;
+}
+.result , .result-img{
+	width: 300px; height:300px;
+	margin:20px auto;
+	border:1px solid red;
+}
+#result{
+	background: green;
+	/*width:100%;
+	height:100%;*/
+}
+</style>
+
+</script>
+</head>
+
+<body>
+<!-- <canvas id="c1"></canvas> -->
+<input type="file" id="file" />
+<input type="button" id="button" value="subtract"/>
+<input type="button" id="mark" value="mark"/>
+<input type="button" id="create" value="create"/>
+<div class="imgfield">
+	<img id="Img" src="" />
+</div>
+<div class="result">
+	<canvas id="result"></canvas>
+</div>
+<div class="result-img">
+	 <img id="new" src="" />
+</div>
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.js"></script>
+<script>
+$(function(){
+	var imgSrc=null;
+	var oInp=$("#file");
+	oInp.on("change",function(){
+		//console.log(this.files[0]);
+		var oFile=this.files[0]
+		var fd= new FileReader();
+		fd.readAsDataURL(oFile);
+		fd.onload=function(){
+			//console.log(this.result);
+			imgSrc=this.result;
+			$("#Img").attr("src",imgSrc);
+
+			//console.log($("#Img").width())
+
+		}
+	})
+
+	$("#button").on("click",function(){
+		var w=$("#Img").width();
+		$("#Img").width(w/2);
+
+	})
+
+	var oC=$("#result").get(0);
+	var oGC=oC.getContext('2d');
+
+	$("#mark").on("click",function(){
+
+		console.log($("#Img").height())
+		oC.width=$("#Img").width() ;
+		oC.height=$("#Img").height() ;
+
+		var xpos = oC.width/2; // 中心点x
+    var ypos = oC.height/2; // 中心点y
+
+		var yImg=new Image();
+		yImg.onload=function(){
+
+			oGC.drawImage(this,0,0,oC.width/2,oC.height/2);
+			oGC.rotate(90*Math.PI/180);
+			//oGC.save();
+			//oGC.translate(xpos,ypos);
+
+			//oGC.drawImage(this,0,0,oC.height,oC.width);
+			//oGC.restore();
+			//oGC.translate(-xpos,-ypos);
+
+		}
+		yImg.src=$("#Img").attr("src");
+
+	})
+
+	$("#create").click(function(){
+		oGC.rotate(90*Math.PI/180);
+		var newSrc=oC.toDataURL();
+		$("#new").attr("src",newSrc);
+	})
+
+})
+</script>
+</body>
+</html>
