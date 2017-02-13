@@ -10,6 +10,26 @@ body{
 	/*overflow:hidden;*/
 }
 
+.input-wrap{
+	position: relative;
+	width: 3rem; height: 3rem; margin:0rem auto; top:1rem;
+	background: white;
+
+}
+.input-wrap input{
+	width: 4rem; height: 4rem;
+	opacity: 0;
+
+}
+.input-wrap p{
+	position: absolute;
+	bottom:-1.2rem; left:50%;
+	margin-left:-4rem;
+	line-height: 1.2rem;
+	font-size: 0.8rem;
+	width: 8rem;text-align: center;
+
+}
 
 .can-wrap{
 	position: absolute;
@@ -17,26 +37,52 @@ body{
 	box-sizing: border-box;
 /*	background: rgba(0,0,0,0.4);*/
 	overflow: hidden;
+
 }
 .can-wrap .tool{
 	position: absolute;
 	left:0; bottom:0;
-	width:100%;height:2rem;
-	background: red;
+	width:100%;height:3rem;
 	box-sizing: border-box;
-	padding:0.5rem;
+	padding: 0.5rem 0;
+
+	display:-webkit-box; display: -moz-box; display: -ms-flexbox; display: -webkit-flex; display: flex;
+
+	box-orient:horizontal;-webkit-box-orient:horizontal; box-lines:single;-webkit-box-lines:single;
+  flex-flow:row nowrap;-webkit-flex-flow:row nowrap;-moz-flex-flow:row nowrap;  /*flex 排列方向+是否换行 兼容写法*/
+
+  justify-content:space-between; -webkit-justify-content:space-between;
+   box-pack:justify;-webkit-box-pack:justify;-moz-box-pack:justify;    /*flex 排列分布规则 兼容写法*/
+
 	z-index: 4;
 }
-.can-wrap .tool input{
-	display: inline-block;
-	height:1rem; line-height: 1rem;
-	margin:0 0.25rem;
-	float:left;
+.can-wrap .tool .range{
+	 flex:1 1 auto;
+	-webkit-flex:1 1 auto;
+	-moz-flex:1 1 auto;
+	-o-flex:1 1 auto;
+	box-flex:1; -webkit-box-flex:1;
+
+	background: white;
+	height:2rem;
+	border:1px solid green;
+	margin:0 0.25rem ;
 }
-.can-wrap .tool input[type=button]{
-	background:red;
-	font-size: 0.8rem;
-	padding:0 0.5rem;
+.can-wrap .tool button{
+	/* display: inline-block;*/
+	flex:0 0 auto;
+	-webkit-flex:0 0 auto;
+	-moz-flex:0 0 auto;
+	-o-flex:0 0 auto;
+
+	border:none; 	 background: #2CFACE;
+	line-height: 2rem;height:2rem;
+	text-align: center;
+	padding:0 1rem;
+	color:white;
+
+	border-radius: 3px;
+	margin:0 0.25rem ;
 }
 
 .can-place{
@@ -50,27 +96,46 @@ body{
 .img-wrap{
 	position: absolute;
 	left:0;top:0;
+	box-sizing: border-box;
 }
 #sample{
 	position: absolute;
 	transform-origin:0 0;
+	-webkit-transform-origin:0 0;
 	left:0;top:0;
 }
 
-/*.cover{
-
+.view{
 	position: absolute;
-	top:0;left:0;right:0;bottom:2rem;
-	z-index: 3;
-}
-.cover*/ .view{
-	position: absolute;
-	top:0; left:0%; /*margin-left:-150px;*/
-	width:300px; height:500px;
-	/*border-left:1px solid red;*/
-
+	top:0; left:0%;
+	width:300px; height:357px;
 }
 
+.bottom{
+	margin-top:1rem;
+	width:100%;
+	height:3rem;
+	box-sizing: border-box;
+	padding:0.5rem 0;
+	text-align: center;
+}
+.bottom button{
+	height: 2rem;line-height: 2rem;
+	font-size: :1.8rem;
+	padding:0 1.5rem;
+	color:white;
+	text-align: center;
+	border:none;
+	background: #2CFACE;
+	border-radius:5px;
+}
+
+.result-wrap{
+	margin-top: 2rem;
+	padding:0.5rem 0;
+	width:100%;
+	text-align: center;
+}
 
 
 

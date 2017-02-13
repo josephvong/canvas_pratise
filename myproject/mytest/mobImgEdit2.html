@@ -8,31 +8,39 @@
 <link rel="stylesheet" type="text/css" href="./merge.css">
 </head>
 <body>
-<div>
-	<input type="file" style="width:150px"/>
+<div class="input-wrap">
+	<input type="file" id="file" style="width:150px"/>
+	<p>点击此处上传图片</p>
 </div>
-<div class="can-wrap">
-	<div class="can-place">
-		<!-- <canvas id="can1"></canvas> -->
-		<div class="img-wrap">
-			<img id="sample" src=""/>
+<div class="can-wrap" style="display:none">
+	<div class="can-place"> <!--画板-->
+		<div class="img-wrap"> <!--图片容器-->
+			<img id="sample" src=""/> <!--编辑图片-->
 		</div>
 	</div>
-	<div class="tool">
-		<input type="button" class="left" value="<"/>
-		<input type="button" class="right" value=">"/>
-		<input type="range" class="range" min="50" max="150" step="10">
-		<input type="button" class="save" value="save"/>
+	<div class="tool"  > <!--工具栏-->
+		<button class="left" style="float:left"><</button>
+		<button class="right" style="float:left">></button>
+		<input type="range" class="range" min="30" max="150" step="10" style="float:left">
+		<button class="save" style="float:right">save</button>
 	</div>
-	<!-- <div class="cover"> -->
-		<div class="view">
-			<div class="touch" style="width:100%; height:100%;"></div>
-		</div>
-	<!-- </div> -->
+
+	<div class="view"> <!--截取区域框-->
+		<div class="touch" style="width:100%; height:100%;"></div>
+	</div>
 </div>
-<img id="result" src="" style="width:300px;height:500px;border:1px solid red" />
+<div class="result-wrap">
+	<img id="result" src="" style="width:300px;height:357px;border:1px solid red; margin:0 auto;display:none" />
+	<img id="postcard" src="" style="width:311px;height:432px;border:1px solid red; margin:0 auto;display:none" />
+</div>
+<div class="bottom">
+	<button class="create"> 点击生成海报 </button>
+</div>
+<canvas id="postcardCan" style="display:none"></canvas>
 </body>
+
 <script src="./jquery.min.js"></script>
+<script src="./vendor/lrmdist/lrz.all.bundle.js"></script>
 <script type="text/javascript">
 
 var IWidth=0; // 图宽
@@ -44,12 +52,16 @@ var touchY=0; // 触摸坐标
 var toX=0; // 位移坐标x
 var toY=0; // 位移坐标y
 var viewX=300;
-var viewY=500;
+var viewY=357;//500;
 var nowRange=100;
+var editImg=null;  // 传入的图片dataURL
+var mergeList=null;//['./static/postcard.png'];
 
+var nC=document.getElementById('postcardCan'); // 获取 postcard 绘制canvas
+var nCG=nC.getContext("2d");
+nC.width=622; nC.height=865; // 定义postcard Canvas 宽高
 
-
-
+// 屏幕宽高获取函数
 function getWH(){
 	var obj={
 		x:document.body.clientWidth,
@@ -57,119 +69,131 @@ function getWH(){
 	}
 	return obj
 }
-
-
+// 屏幕宽高
 var canX=getWH().x;
-var canY=getWH().y;//Math.round((getWH().y)*90/100);
+var canY=getWH().y;
 
-$("html").css('width',getWH().x);
-$("html").css('height',getWH().y);
-$("body").css('width',getWH().x);
-$("body").css('height',getWH().y);
-$(".can-wrap").css('width',getWH().x);
-$(".can-wrap").css('height',getWH().y);
-$(".view").css({
-	"border-left":Math.floor((getWH().x-viewX)/2)+"px solid rgba(0,0,0,0.4)",
-	"border-right":Math.floor((getWH().x-viewX)/2)+"px solid rgba(0,0,0,0.4)",
-	"border-top":Math.floor((getWH().y-viewY)/2)+"px solid rgba(0,0,0,0.4)",
-	"border-bottom":Math.floor((getWH().y-viewY)/2)+"px solid rgba(0,0,0,0.4)",
+//----------------- 定义基础样式 -----------------------
+$("html").css('width',canX); $("html").css('height',canY);
+$("body").css('width',canX); $("body").css('height',canY);
+$(".can-wrap").css('width',canX); $(".can-wrap").css('height',canY); // 截图器宽高
+
+$(".view").css({	// 截图框样式设置
+	"border-left":Math.floor((canX-viewX)/2)+"px solid rgba(0,0,0,0.4)",
+	"border-right":Math.floor((canX-viewX)/2)+"px solid rgba(0,0,0,0.4)",
+	"border-top":Math.floor((canY-viewY)/2)+"px solid rgba(0,0,0,0.4)",
+	"border-bottom":Math.floor((canY-viewY)/2)+"px solid rgba(0,0,0,0.4)",
 })
 
-$(".can-place").css("width",canX);  // canvas容器宽
-$(".can-place").css("height",canY); // canvas容器高
-// $("#can1").attr("width",canX);  // canvas容器宽
-// $("#can1").attr("height",canY); // canvas容器高
+$(".can-place").css("width",canX);$(".can-place").css("height",canY);  // 定义画板宽高
+
 
 //----------------------------------------------------------------
+// 提交图片
+$("#file").on("change",function(){
 
-oImg=new Image(); oImg.src="./test4.jpg";
-oImg.onload=function(){
+	// 设定复位--------------
+	$(".range").attr("value",100);
+	$(".range").val(100);
+	nowRange=100;
+	n=0;
+	$(".img-wrap").css({"left":0,"top":0})
+	$("#sample").css({"transform":"rotate(0deg)",top:0,left:0});
+	// 设定复位-----------
 
-	if(this.width>=300 && this.height>=500){
-		IWidth=this.width/2 ;   // 记录图形的宽
-		IHeight=this.height/2 ; // 记录图像的高
-		$(".img-wrap").css({"width":IWidth,"height":IHeight}); // 容器大小
-		$("#sample").css({"width":IWidth,"height":IHeight}).attr("src",oImg.src);
+	var fs=this.files[0];
+	lrz(fs).then(function(rst){
+		var oImg=new Image(); oImg.src=rst.base64; editImg=rst.base64;
+		oImg.onload=function(){
+			if(this.width>=300 && this.height>=400){   // 图片至少300*500
+				$(".can-wrap").show(); // 截图器显示
+				//IWidth=(this.width/3).toFixed(0) ; IHeight=(this.height/3).toFixed(0) ; // 记录图形的宽高（原图缩小一半）
+				IWidth=this.width/2 ; IHeight=this.height/2;
+				$(".img-wrap").css({"width":IWidth,"height":IHeight}); // 容器大小
+				$("#sample").css({"width":IWidth,"height":IHeight}).attr("src",oImg.src);
+			}else{
+				alert("图片规格不符合标准")
+			}
+		}
+	})
 
-	}else{
-		alert("图片规格不符合标准")
-	}
+})
 
-}
-
-
-
-
-
+// 顺时旋转
 $(".left").click(function(){
-	if (n<=0){n=3}else{n-=1;}
+	if (n<0){n=3}else{n-=1;}
 	imgChange(n,IWidth,IHeight,nowRange);
 	document.title=n;
 })
 
+// 逆势旋转
 $(".right").click(function(){
-	if (n>=3){n=0}else{n+=1;}
+	if (n>3){n=0}else{n+=1;}
 	imgChange(n,IWidth,IHeight,nowRange);
 	document.title=n;
 })
 
+// 缩放调整
 $(".range").on("change",function(){
 	nowRange=this.value;
 	imgChange(n,IWidth,IHeight,nowRange);
 })
+
+// 点击抠图
 $(".save").on("click",function(){
-
-
 	 var iImg=new Image();
-	 iImg.src="./test4.jpg";
+	 iImg.src=editImg;
 	 iImg.onload=function(){
 	 		var oC=document.createElement("canvas");
 	 		var oGC=oC.getContext("2d");
 	 		var goLeft=Math.floor((getWH().x-viewX)/2)*2;
 	 		var goTop=Math.floor((getWH().y-viewY)/2)*2;
-			oC.width=600;
-			oC.height=1000;
-
+			oC.width=600;//600;
+			oC.height=715;//1000;
 			switch (n)
 			{
 				case 1: // 顺90
-					oGC.translate(toX*2-goLeft,toY*2-goTop);
 					oGC.rotate(90*Math.PI/180);
-					oGC.scale(nowRange/100,nowRange/100);
-					//oGC.drawImage(obj,0,-height);
-					oGC.drawImage(this,0,-this.height,this.width,this.height);
+					oGC.translate(toY*2-goTop,-toX*2+goLeft);
+					oGC.drawImage(this,0,-this.height*nowRange/100,this.width*nowRange/100,this.height*nowRange/100);
 					break;
 				case 2: // 顺180
 					oGC.rotate(180*Math.PI/180);
-					oGC.drawImage(obj,-width,-height);
+					oGC.translate(-toX*2+goLeft,-toY*2+goTop);
+					oGC.drawImage(this,-this.width*nowRange/100,-this.height*nowRange/100,this.width*nowRange/100,this.height*nowRange/100);
 					break;
 				case 3:
 					oGC.rotate(270*Math.PI/180);
-					oGC.drawImage(obj,-width,0);
+					oGC.translate(-toY*2+goTop,toX*2-goLeft);
+					oGC.drawImage(this,-this.width*nowRange/100,0,this.width*nowRange/100,this.height*nowRange/100);
 					break;
 				case 0:
-					oGC.translate(toX*2-goLeft,toY*2-goTop);
 					oGC.rotate(0*Math.PI/180);
-					oGC.scale(nowRange/100,nowRange/100);
+					oGC.translate(toX*2-goLeft,toY*2-goTop);
 					oGC.drawImage(this,0,0,this.width*nowRange/100,this.height*nowRange/100);
 					break;
 			}
-
-
 			var newSrc=oC.toDataURL();
 			$(".can-wrap").hide();
 			$("#result").attr("src",newSrc);
+			mergeList=['./static/postcard.png',newSrc];// .push(newSrc);
+			$("#result").show(); $("#postcard").hide();
 
 	 }
 })
 
+// 生成海报
+$(".create").click(function(){
+	if(mergeList.length<2){alert("请提交图片")}else{
+		draw(0)
+	}
+})
 
 /*----------拖动-----------------*/
 $(".view .touch").bind("touchstart",function(){
 	touchX=event.changedTouches[0].clientX-$(".img-wrap").offset().left;
 	touchY=event.changedTouches[0].clientY-$(".img-wrap").offset().top;
 })
-
 $(".view .touch").bind("touchmove",function(){
 	//console.log(event);
 	var x=event.changedTouches[0].clientX-touchX
@@ -184,12 +208,38 @@ $(".view .touch").bind("touchend",function(){
 })
 /*----------拖动-----------------*/
 
+function draw(num){
+
+
+	if(num<mergeList.length){
+		var img=new Image; // 图片对象
+		img.src=mergeList[num]; //图片对象读取 图片路径
+		if(num==0){
+			img.onload=function(){
+				nCG.drawImage(img,0,0);
+				draw(num+1);
+			}
+		}else if(num==1){
+			img.onload=function(){
+				nCG.globalCompositeOperation = 'source-over';
+				nCG.drawImage(img,88,145,444,528);
+				draw(num+1);
+			}
+		}
+	}else{
+		var postSrc=nC.toDataURL();
+		$("#postcard").attr("src",postSrc);
+		$("#result").hide() ; $("#postcard").show();
+	}
+}
+
 
 function imgChange(n,width,height,scale){
 	var scl=scale/100;
 	var w=width*scl;
 	var h=height*scl;
 	$("#sample").css({width:w,height:h})
+	//$(".img-wrap").css({width:w,height:h})
 	switch (n)
 	{
 		case 1: // 顺90
@@ -211,59 +261,6 @@ function imgChange(n,width,height,scale){
 	}
 }
 
-function toChange(obj,width,height,n,scale,transX,transY){
-	var oC=document.getElementById("can1");
-	var oGC=oC.getContext("2d");
-	oGC.clearRect(0,0,oC.width,oC.height )
-			oC.width=height;
-			oC.height=width;
-			//oC.width=canX;
-			//oC.height=canY;
-
-			oGC.scale(scale/100,scale/100);
-			//oGC.translate(transX,transY);
-			oGC.rotate(90*Math.PI/180);
-			oGC.drawImage(obj,0,-height,width,height);
-}
-
-function draw(obj,width,height ){  // canvas内生成 原图
-	var oC=document.getElementById("can1");
-	var oGC=oC.getContext("2d");
-	oC.width=width;
-	oC.height=height;
-	oGC.drawImage(obj,0,0,width,height);
-	//--------测试90-------------
-	/*
-	oGC.rotate(90*Math.PI/180);
-	oGC.translate(50,50) // +toX -->can的+Y ， +toY --> can 的-X
-	oGC.drawImage(obj,0,-height,width,height);
-
-	oGC.rotate(180*Math.PI/180);
-	oGC.translate(-30,-60) //+toX -->can的-X ， +toY --> can 的-Y
-	oGC.drawImage(obj,-width,-height,width,height);
-
-	oGC.rotate(270*Math.PI/180);
-	oGC.translate(50,30) // +toX -->can的-Y ， +toY --> can 的+X
-	oGC.drawImage(obj,-width,0,width,height);
-	*/
-}
-
-function setRange(obj,oRan){
-	var iw=obj.width; // 图宽
-	var ih=obj.height;// 图高
-	if(iw/600>1){
-		oRan.attr("max",(iw/600*100).toFixed(0));
-		oRan.attr("value",(iw/600*100).toFixed(0));
-		oRan.attr("min",100);
-		nowRange=(iw/600*100).toFixed(0)
-	}else{
-		oRan.attr("max",100);
-		oRan.attr("min",(iw/600*100).toFixed(0));
-		oRan.attr("value",(iw/600*100).toFixed(0));
-		nowRange=(iw/600*100).toFixed(0)
-	}
-	console.log((iw/600*100).toFixed(0));
-}
 
 </script>
 </html>
